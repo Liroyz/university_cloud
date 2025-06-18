@@ -31,10 +31,12 @@ function App() {
             <Route path="/" element={<Navigate to="/my-files" replace />} />
             <Route path="/my-files" element={<MyFiles />} />
             <Route path="/shared" element={<SharedFiles />} />
+            {/*
             <Route path="/courses" element={<Courses />} />
             <Route path="/assignments" element={<Assignments />} />
             <Route path="/library" element={<Library />} />
             <Route path="/settings" element={<Settings />} />
+            */}
           </Routes>
         </MainContent>
       </AppContainer>
