@@ -64,9 +64,17 @@ class AuthViewSet(viewsets.ViewSet):
         try:
             refresh_token = request.data.get('refresh')
             refresh = RefreshToken(refresh_token)
-            return Response({
-                'access': str(refresh.access_token),
-            })
+            # Если включена ротация, выдаём новый refresh-токен
+            if getattr(settings, 'SIMPLE_JWT', {}).get('ROTATE_REFRESH_TOKENS', False):
+                new_refresh = refresh.rotate()
+                return Response({
+                    'access': str(new_refresh.access_token),
+                    'refresh': str(new_refresh),
+                })
+            else:
+                return Response({
+                    'access': str(refresh.access_token),
+                })
         except Exception as e:
             return Response({'error': 'Invalid refresh token'}, status=status.HTTP_400_BAD_REQUEST)
 
