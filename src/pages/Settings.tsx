@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { storageService, StorageInfo as StorageInfoType, CacheInfo } from '../services/storageService';
 
 const ContentHeader = styled.header`
   margin-bottom: 2rem;
@@ -277,6 +278,58 @@ const Settings: React.FC = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [fileNotifications, setFileNotifications] = useState(true);
   const [deadlineNotifications, setDeadlineNotifications] = useState(true);
+  
+  // Storage states
+  const [storageInfo, setStorageInfo] = useState<StorageInfoType>({
+    used: 0,
+    total: 10 * 1024 * 1024 * 1024, // 10 GB
+    used_percentage: 0
+  });
+  const [cacheInfo, setCacheInfo] = useState<CacheInfo>({
+    size: 0,
+    items_count: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [clearingCache, setClearingCache] = useState(false);
+
+  // Load storage and cache info
+  useEffect(() => {
+    loadStorageInfo();
+  }, []);
+
+  const loadStorageInfo = async () => {
+    try {
+      setLoading(true);
+      const [storage, cache] = await Promise.all([
+        storageService.getStorageInfo(),
+        storageService.getCacheInfo()
+      ]);
+      setStorageInfo(storage);
+      setCacheInfo(cache);
+    } catch (error) {
+      console.error('Error loading storage info:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearCache = async () => {
+    if (!window.confirm('Вы уверены, что хотите очистить кэш?')) return;
+    
+    try {
+      setClearingCache(true);
+      await storageService.clearCache();
+      storageService.clearLocalCache();
+      await loadStorageInfo(); // Reload info after clearing
+      alert('Кэш успешно очищен!');
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+      // Даже если серверная очистка не удалась, локальная очистка все равно работает
+      alert('Локальный кэш очищен. Серверная очистка может быть недоступна.');
+    } finally {
+      setClearingCache(false);
+    }
+  };
 
   return (
     <>
@@ -454,21 +507,58 @@ const Settings: React.FC = () => {
             <h2>Хранилище</h2>
           </CardHeader>
           <CardContent>
-            <StorageInfo>
-              <StorageProgress>
-                <div className="progress-bar">
-                  <div className="progress" style={{ width: '65%' }}></div>
-                </div>
-                <div className="storage-details">
-                  <span>Использовано 65%</span>
-                  <span>6.5 ГБ из 10 ГБ</span>
-                </div>
-              </StorageProgress>
-              <StorageActions>
-                <Button>Очистить кэш</Button>
-                <Button primary>Увеличить хранилище</Button>
-              </StorageActions>
-            </StorageInfo>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: '2rem', color: '#1976d2' }}></i>
+                <p>Загрузка информации о хранилище...</p>
+              </div>
+            ) : (
+              <StorageInfo>
+                <StorageProgress>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress" 
+                      style={{ 
+                        width: `${storageInfo.used_percentage}%`,
+                        backgroundColor: storageInfo.used_percentage > 80 ? '#f44336' : 
+                                        storageInfo.used_percentage > 60 ? '#ff9800' : '#4caf50'
+                      }}
+                    ></div>
+                  </div>
+                  <div className="storage-details">
+                    <span>Использовано {storageInfo.used_percentage.toFixed(1)}%</span>
+                    <span>{storageService.formatFileSize(storageInfo.used)} из {storageService.formatFileSize(storageInfo.total)}</span>
+                  </div>
+                </StorageProgress>
+                <StorageActions>
+                  <Button 
+                    onClick={handleClearCache}
+                    disabled={clearingCache}
+                  >
+                    {clearingCache ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin"></i>
+                        Очистка...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-broom"></i>
+                        Очистить кэш
+                      </>
+                    )}
+                  </Button>
+                </StorageActions>
+                {cacheInfo.size > 0 && (
+                  <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                    <small style={{ color: '#666' }}>
+                      <i className="fas fa-info-circle"></i>
+                      Размер кэша: {storageService.formatFileSize(cacheInfo.size)} 
+                      ({cacheInfo.items_count} элементов)
+                    </small>
+                  </div>
+                )}
+              </StorageInfo>
+            )}
           </CardContent>
         </SettingsSection>
       </SettingsContainer>

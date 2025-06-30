@@ -1,4 +1,5 @@
 import { api } from './api';
+import axios from 'axios';
 
 export interface User {
   id: string;
@@ -202,13 +203,30 @@ class AuthService {
         throw new Error('No refresh token available');
       }
 
-      const response = await api.post<{ access: string }>('/auth/refresh/', {
-        refresh: refreshToken
-      });
+      // Используем axios напрямую, чтобы избежать интерцепторов
+      const response = await axios.post<{ access: string; refresh?: string }>(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/auth/refresh/`, 
+        {
+          refresh: refreshToken
+        }, 
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
 
-      localStorage.setItem(this.TOKEN_KEY, response.data.access);
-      return response.data.access;
+      const newAccessToken = response.data.access;
+      localStorage.setItem(this.TOKEN_KEY, newAccessToken);
+      
+      // Если сервер вернул новый refresh token, обновляем его
+      if (response.data.refresh) {
+        localStorage.setItem(this.REFRESH_TOKEN_KEY, response.data.refresh);
+      }
+      
+      return newAccessToken;
     } catch (error) {
+      console.error('Token refresh error:', error);
       this.clearAuthData();
       throw new Error('Failed to refresh token');
     }

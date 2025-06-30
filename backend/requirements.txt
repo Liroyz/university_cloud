@@ -1,6 +1,36 @@
+# Django and REST Framework
 Django==5.2.3
 djangorestframework==3.14.0
+djangorestframework-simplejwt==5.5.0
+
+# CORS and Headers
 django-cors-headers==4.3.1
-django-minio-storage
-Pillow>=10.0.0
-python-decouple==3.8 
+
+# Storage and File Handling
+django-minio-storage==0.5.8
+minio==7.2.15
+Pillow==11.2.1
+
+# Database
+psycopg2-binary==2.9.10
+
+# Authentication and Security
+PyJWT==2.9.0
+pycryptodome==3.23.0
+argon2-cffi==25.1.0
+argon2-cffi-bindings==21.2.0
+
+# Configuration and Utilities
+python-decouple==3.8
+asgiref==3.8.1
+pytz==2025.2
+sqlparse==0.5.3
+
+# HTTP and Networking
+urllib3==2.5.0
+certifi==2025.6.15
+
+# Development Dependencies
+cffi==1.17.1
+pycparser==2.22
+typing_extensions==4.14.0 
