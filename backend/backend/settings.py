@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    'django_minio_backend',
     'storage',
 ]
 
@@ -130,8 +129,8 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (User uploaded files)
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -207,36 +206,17 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# MinIO Storage Settings
-MINIO_ENDPOINT = 'localhost:9000'
-MINIO_ACCESS_KEY = 'minioadmin'
-MINIO_SECRET_KEY = 'minioadmin'
-MINIO_USE_HTTPS = False
-
-# MinIO Bucket Configuration
-MINIO_PUBLIC_BUCKETS = [
-    'university-cloud',
-]
-
-MINIO_PRIVATE_BUCKETS = [
-    'university-cloud-private',
-]
-
-# Use MinIO for file storage
-DEFAULT_FILE_STORAGE = 'django_minio_backend.storage.MinioMediaStorage'
-
-# Explicitly set the media bucket name
+# MinIO Storage Settings (новый backend)
+MINIO_STORAGE_ENDPOINT = 'localhost:9000'
+MINIO_STORAGE_ACCESS_KEY = 'minioadmin'
+MINIO_STORAGE_SECRET_KEY = 'minioadmin'
+MINIO_STORAGE_USE_HTTPS = False
 MINIO_STORAGE_MEDIA_BUCKET_NAME = 'university-cloud'
-
-# Additional MinIO settings for newer version
-MINIO_STORAGE_MEDIA_BACKUP_BUCKET = None
-MINIO_STORAGE_MEDIA_BACKUP_FORMAT = '%c/'
-MINIO_STORAGE_STATIC_BACKUP_BUCKET = None
-MINIO_STORAGE_STATIC_BACKUP_FORMAT = '%c/'
-MINIO_STORAGE_MEDIA_OBJECT_METADATA = {}
-MINIO_STORAGE_STATIC_OBJECT_METADATA = {}
-
-# Additional MinIO settings for proper configuration
+MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
 MINIO_STORAGE_STATIC_BUCKET_NAME = 'university-cloud'
+MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
 MINIO_STORAGE_MEDIA_USE_PRESIGNED = True
 MINIO_STORAGE_STATIC_USE_PRESIGNED = True
+
+DEFAULT_FILE_STORAGE = 'django_minio_storage.storage.MinioMediaStorage'
+STATICFILES_STORAGE = 'django_minio_storage.storage.MinioStaticStorage'

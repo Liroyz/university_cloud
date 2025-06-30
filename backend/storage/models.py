@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 import os
 import time
+from minio_storage.storage import MinioMediaStorage
 
 def file_upload_path(instance, filename):
     """Generate file path for MinIO storage"""
@@ -69,7 +70,7 @@ class File(models.Model):
         ('other', 'Other'),
     ]
     
-    file = models.FileField(upload_to=file_upload_path)
+    file = models.FileField(upload_to=file_upload_path, storage=MinioMediaStorage())
     original_filename = models.CharField(max_length=255, null=True)
     file_type = models.CharField(max_length=20, choices=FILE_TYPE_CHOICES, default='other')
     file_size = models.BigIntegerField(default=0)  # Size in bytes
