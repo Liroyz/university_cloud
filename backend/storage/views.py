@@ -161,17 +161,11 @@ class FileViewSet(viewsets.ModelViewSet):
         if file_obj.file:
             # Check if user has permission to download this file
             if file_obj.uploaded_by == request.user or file_obj.is_public:
-                # Build full URL
-                if hasattr(settings, 'USE_HTTPS') and settings.USE_HTTPS:
-                    protocol = 'https'
-                else:
-                    protocol = 'http'
-                
-                host = request.get_host()
-                full_url = f"{protocol}://{host}{file_obj.file.url}"
-                
+                # Получаем presigned URL для Minio
+                url = file_obj.file.storage.url(file_obj.file.name)
+                print(f"[DEBUG] Minio download URL: {url}")
                 return Response({
-                    'download_url': full_url,
+                    'download_url': url,
                     'filename': file_obj.original_filename or file_obj.file.name,
                     'file_size': file_obj.file_size,
                     'mime_type': file_obj.mime_type

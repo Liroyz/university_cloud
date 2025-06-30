@@ -84,11 +84,7 @@ export async function downloadFileDirect(id: number): Promise<void> {
     
     // Add authentication headers if needed
     const token = localStorage.getItem('auth_token');
-    if (token) {
-      // For direct file downloads, we might need to handle authentication differently
-      // This is a fallback approach
-      link.href = `${downloadInfo.download_url}?token=${token}`;
-    }
+    link.href = downloadInfo.download_url;
     
     // Trigger the download
     document.body.appendChild(link);
