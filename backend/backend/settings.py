@@ -9,9 +9,12 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-k+_j3gtl@6$)l_rudg6o1(j%2r1odpizbd=&ymia7zjcsahv@u'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend']
 
 
 # Application definition
@@ -80,16 +83,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'university_cloud',
-        'USER': 'matthewandrews',  # Your macOS username
-        'PASSWORD': 'password',  # Updated password for PostgreSQL 16
-        'HOST': 'localhost',
-        'PORT': '5432',
+    "default": {
+        "ENGINE": os.getenv("DB_ENGINE"),
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -203,16 +205,19 @@ SIMPLE_JWT = {
 }
 
 # MinIO Storage Settings (новый backend)
-MINIO_STORAGE_ENDPOINT = 'localhost:9000'
-MINIO_STORAGE_ACCESS_KEY = 'minioadmin'
-MINIO_STORAGE_SECRET_KEY = 'minioadmin'
+MINIO_STORAGE_ENDPOINT =  os.getenv("MINIO_STORAGE_ENDPOINT")
+MINIO_STORAGE_ACCESS_KEY = os.getenv("MINIO_STORAGE_ACCESS_KEY")
+MINIO_STORAGE_SECRET_KEY = os.getenv("MINIO_STORAGE_SECRET_KEY")
+MINIO_STORAGE_MEDIA_URL = os.getenv("MINIO_STORAGE_MEDIA_URL")
+MINIO_STORAGE_STATIC_URL = os.getenv("MINIO_STORAGE_STATIC_URL")
 MINIO_STORAGE_USE_HTTPS = False
 MINIO_STORAGE_MEDIA_BUCKET_NAME = 'university-cloud'
 MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
-MINIO_STORAGE_STATIC_BUCKET_NAME = 'university-cloud'
+MINIO_STORAGE_STATIC_BUCKET_NAME = 'cloud-static'
 MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
-MINIO_STORAGE_MEDIA_USE_PRESIGNED = True
-MINIO_STORAGE_STATIC_USE_PRESIGNED = True
+MINIO_STORAGE_MEDIA_USE_PRESIGNED = False
+MINIO_STORAGE_STATIC_USE_PRESIGNED = False
+MINIO_STORAGE_MEDIA_PRESIGN_URLS = False
 
 DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 STATICFILES_STORAGE = 'minio_storage.storage.MinioStaticStorage'
