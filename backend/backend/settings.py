@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
+import json
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -221,3 +222,95 @@ MINIO_STORAGE_MEDIA_PRESIGN_URLS = False
 
 DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 STATICFILES_STORAGE = 'minio_storage.storage.MinioStaticStorage'
+
+
+# Logging Settings
+LOG_DIR = os.path.join(BASE_DIR, 'logs')  # Используем локальную папку в проекте
+LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO')
+
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {  # Добавляем недостающий форматтер
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': json.dumps({
+                'timestamp': '%(asctime)s',
+                'level': '%(levelname)s',
+                'module': '%(module)s',
+                'process': '%(process)d',
+                'thread': '%(thread)d',
+                'message': '%(message)s',
+                'pathname': '%(pathname)s',
+            }),
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose' if DEBUG else 'simple',
+        },
+        'file_app': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'app.log'),
+            'maxBytes': 50 * 1024 * 1024,  # 50MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'file_error': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'error.log'),
+            'maxBytes': 50 * 1024 * 1024,  # 50MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file_error'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'file_error'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'backend': {
+            'handlers': ['console', 'file_app'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        'storage': {
+            'handlers': ['console', 'file_app'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+}
